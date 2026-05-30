@@ -28,6 +28,6 @@ export function applyTheme(theme: Theme) {
 
 export function applyInitialTheme() {
   const stored = getStoredTheme()
-  const theme = stored ?? getSystemTheme()
+  const theme = stored ?? 'dark'
   applyTheme(theme)
 }

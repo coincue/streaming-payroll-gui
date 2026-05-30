@@ -1,4 +1,21 @@
 export type WalletRole = 'factory' | 'company' | 'team' | 'employee'
+export type PaymentMode = 'percentage' | 'exact'
+export type FiatCurrency =
+  | 'CAD'
+  | 'USD'
+  | 'EUR'
+  | 'GBP'
+  | 'AUD'
+  | 'NZD'
+  | 'JPY'
+  | 'CHF'
+  | 'SGD'
+  | 'HKD'
+  | 'INR'
+  | 'PHP'
+  | 'MXN'
+  | 'BRL'
+  | 'ZAR'
 
 export type FactoryWallet = {
   role: 'factory'
@@ -21,6 +38,10 @@ export type TeamWallet = {
   name: string
   companyAddress: string
   percentage: number // 0-100, share of company funds
+  paymentType?: 'percentage' | 'fixed'
+  fiatCurrency?: FiatCurrency
+  exactEthAmount?: string
+  exactFiatAmount?: string
   timeZone?: string
   started?: boolean // Whether payment distribution has been started for this team
   completedAt?: string // ISO string of completion time in company/team time zone
@@ -32,6 +53,10 @@ export type EmployeeWallet = {
   name: string
   parentAddress: string // company or team
   percentage: number // 0-100, share of parent funds
+  paymentType?: 'percentage' | 'fixed'
+  fiatCurrency?: FiatCurrency
+  exactEthAmount?: string
+  exactFiatAmount?: string
   started: boolean // Whether payment distribution has been started for this employee
   hours?: number
   rate?: number
@@ -45,6 +70,8 @@ export type PayrollConfig = {
   company: CompanyWallet | null
   teams: TeamWallet[]
   employees: EmployeeWallet[]
+  paymentMode: PaymentMode
+  fiatCurrency: FiatCurrency
 }
 
 export function createDefaultConfig(): PayrollConfig {
@@ -52,7 +79,9 @@ export function createDefaultConfig(): PayrollConfig {
     factory: null,
     company: null,
     teams: [],
-    employees: []
+    employees: [],
+    paymentMode: 'percentage',
+    fiatCurrency: 'CAD'
   }
 }
 
@@ -86,6 +115,12 @@ export function computeDistribution(config: PayrollConfig, totalPay: number) {
     dist.forEach((d) => result.push({ ...d, role: 'employee' }))
   } else {
     // Company -> Teams -> Employees
+    const companyEmployees = config.employees.filter(
+      (e) => e.parentAddress === config.company!.address
+    )
+    const directEmployeeDist = distributeAmount(totalPay, companyEmployees)
+    directEmployeeDist.forEach((d) => result.push({ ...d, role: 'employee' }))
+
     const teamDist = distributeAmount(totalPay, config.teams)
     teamDist.forEach((td) => {
       result.push({ ...td, role: 'team' })

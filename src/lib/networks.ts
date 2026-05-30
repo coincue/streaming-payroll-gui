@@ -22,6 +22,17 @@ export const networks: Record<string, NetworkConfig> = {
     },
     usdcAddress: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' // Sepolia USDC test token
   },
+  baseSepolia: {
+    chainId: 84532,
+    name: 'Base Sepolia',
+    rpcUrl: 'https://sepolia.base.org',
+    nativeCurrency: {
+      name: 'Ether',
+      symbol: 'ETH',
+      decimals: 18
+    },
+    usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCf7e' // Base Sepolia USDC
+  },
   mainnet: {
     chainId: 1,
     name: 'Ethereum Mainnet',

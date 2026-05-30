@@ -12,9 +12,11 @@ import {
 
 type Props = {
   onAccountChange?: (account: string | null) => void
+  onNotify?: (notice: { type: 'success' | 'warning' | 'error'; title: string; message: string } | null) => void
+  compact?: boolean
 }
 
-export default function WalletConnect({ onAccountChange }: Props) {
+export default function WalletConnect({ onAccountChange, onNotify, compact = false }: Props) {
   const provider = getProvider()
   const [accounts, setAccounts] = useState<string[]>([])
   const [chainId, setChainId] = useState<string | null>(null)
@@ -46,10 +48,15 @@ export default function WalletConnect({ onAccountChange }: Props) {
       const { accounts: accs, chainId: cid } = await connectWallet()
       setAccounts(accs)
       setChainId(cid)
+      onNotify?.(null)
     } catch (e: any) {
-      alert(e?.message ?? 'Failed to connect wallet')
+      onNotify?.({
+        type: 'error',
+        title: 'Wallet connection failed',
+        message: e?.message ?? 'Failed to connect wallet'
+      })
     }
-  }, [])
+  }, [onNotify])
 
   const handleDisconnect = useCallback(async () => {
     try {
@@ -62,10 +69,10 @@ export default function WalletConnect({ onAccountChange }: Props) {
   }, [])
 
   return (
-    <div className="card" style={{ marginBottom: '1rem' }}>
-      <div className="row between">
+    <div className={compact ? 'wallet-connect wallet-connect-compact' : 'card wallet-connect'}>
+      <div className="row between wallet-connect-row">
         <div>
-          <div style={{ fontWeight: 700 }}>Wallet</div>
+          <div className="wallet-connect-title">Wallet</div>
           {!provider && <div className="status-danger">MetaMask not detected</div>}
           {provider && !connected && <div className="status-muted">Not connected</div>}
           {provider && connected && (
@@ -77,7 +84,7 @@ export default function WalletConnect({ onAccountChange }: Props) {
         <div>
           {!connected ? (
             <button className="btn btn-primary" onClick={handleConnect} disabled={!provider}>
-              Connect MetaMask
+              Connect Wallet
             </button>
           ) : (
             <button className="btn" onClick={handleDisconnect}>Disconnect</button>
